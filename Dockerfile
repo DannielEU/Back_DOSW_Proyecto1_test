@@ -1,4 +1,5 @@
-FROM node:20-alpine
+# Stage 1: Build
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
@@ -6,17 +7,27 @@ WORKDIR /app
 COPY package*.json ./
 
 # Instala todas las dependencias (incluidas las de desarrollo)
-# porque necesitamos @nestjs/cli para construir
 RUN npm ci
 
-# Instala el CLI de Nest globalmente (alternativo a usarlo desde node_modules)
-RUN npm install -g @nestjs/cli
-
-# Copia el resto del código fuente
+# Copia el código fuente y configuraciones
 COPY . .
 
 # Compila el proyecto NestJS
 RUN npm run build
+
+# Stage 2: Production
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copia los archivos de dependencias
+COPY package*.json ./
+
+# Instala solo dependencias de producción
+RUN npm ci --omit=dev
+
+# Copia los archivos compilados desde el stage de build
+COPY --from=builder /app/dist ./dist
 
 # Expone el puerto 3000
 EXPOSE 3000
