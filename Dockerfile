@@ -1,4 +1,4 @@
-FROM node:22-alphine
+FROM node:20-alphine
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
